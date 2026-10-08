@@ -21,10 +21,23 @@ pipeline {
 
         stage('Push the artifacts') {
             steps {
-                sh '''
-                    echo "Push to Docker Hub"
-                    docker push xhazem043/cicd-e2e:${BUILD_NUMBER}
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        echo "Login to Docker Hub"
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+                        echo "Push to Docker Hub"
+                        docker push xhazem043/cicd-e2e:${BUILD_NUMBER}
+
+                        docker logout
+                    '''
+                }
             }
         }
     }
